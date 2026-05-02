@@ -44,6 +44,7 @@
     background-color: #F8F5F2;
     color: #1A1A1A;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 }
 
