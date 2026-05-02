@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 25% 97%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 356 40% 80%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 30 25% 95%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 30 20% 94%;
+    --muted-foreground: 0 0% 50%;
+    --accent: 356 40% 80%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 15% 88%;
+    --input: 30 15% 88%;
+    --ring: 356 40% 75%;
+    --chart-1: 356 40% 70%;
+    --chart-2: 30 50% 60%;
+    --chart-3: 0 0% 30%;
+    --chart-4: 40 60% 60%;
+    --chart-5: 10 50% 65%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #F8F5F2;
+    color: #1A1A1A;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-[#1A1A1A] text-white px-8 py-3 rounded-full text-sm font-medium tracking-widest uppercase transition-all duration-300 hover:bg-[#2D2D2D] hover:scale-105 hover:shadow-lg inline-flex items-center justify-center;
+  }
+
+  .btn-outline {
+    @apply border border-[#1A1A1A] text-[#1A1A1A] px-8 py-3 rounded-full text-sm font-medium tracking-widest uppercase transition-all duration-300 hover:bg-[#1A1A1A] hover:text-white inline-flex items-center justify-center;
+  }
+
+  .btn-blush {
+    @apply bg-[#E8B4B8] text-[#1A1A1A] px-8 py-3 rounded-full text-sm font-medium tracking-widest uppercase transition-all duration-300 hover:bg-[#D4969A] hover:shadow-lg inline-flex items-center justify-center;
+  }
+
+  .input-field {
+    @apply w-full border border-[#E5DDD8] rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-[#E8B4B8] focus:ring-2 focus:ring-[#E8B4B8]/20 transition-all;
+  }
+
+  .section-heading {
+    font-family: 'Playfair Display', serif;
+    @apply text-3xl md:text-4xl font-semibold text-[#1A1A1A] text-center;
+  }
+
+  .section-subheading {
+    @apply text-xs tracking-widest uppercase text-[#E8B4B8] text-center;
+  }
+}
+
+@layer utilities {
+  .font-playfair {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F5F2;
+}
+::-webkit-scrollbar-thumb {
+  background: #E8B4B8;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #D4969A;
+}
