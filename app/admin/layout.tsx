@@ -35,35 +35,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user || profile?.role !== 'admin') return null;
 
   return (
-    <div className="flex min-h-screen bg-[#0F0F0F]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#0F0F0F]">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#1A1A1A] flex flex-col">
-        <div className="px-6 py-8 border-b border-white/10">
-          <span className="font-playfair text-2xl font-semibold text-white tracking-wider">Lumière</span>
-          <p className="text-white/40 text-xs mt-1">Admin Panel</p>
+      <aside className="w-full md:w-64 bg-[#1A1A1A] flex flex-col flex-shrink-0">
+        <div className="px-6 py-6 border-b border-white/10 flex justify-between items-center md:block">
+          <div>
+            <span className="font-playfair text-2xl font-semibold text-white tracking-wider">Lumière</span>
+            <p className="text-white/40 text-xs mt-1 md:block hidden">Admin Panel</p>
+          </div>
         </div>
 
-        <nav className="flex-1 px-3 py-6 space-y-1">
+        <nav className="px-3 py-4 md:py-6 flex md:flex-col gap-2 overflow-x-auto scrollbar-hide flex-1 md:flex-none">
           {navItems.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || (href !== '/admin' && pathname.startsWith(href));
             return (
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${
+                className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:py-3 rounded-xl text-sm whitespace-nowrap transition-all ${
                   active
                     ? 'bg-[#E8B4B8] text-[#1A1A1A] font-medium'
                     : 'text-white/60 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Icon size={18} />
+                <Icon size={18} className="flex-shrink-0" />
                 {label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="px-3 py-6 border-t border-white/10 space-y-1">
+        <div className="hidden md:block px-3 py-6 border-t border-white/10 space-y-1 flex-1">
           <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all">
             <ArrowLeft size={18} />
             Back to Store
