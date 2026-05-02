@@ -14,7 +14,7 @@ export default function Footer() {
           <p className="text-white/60 text-sm mb-8 max-w-md mx-auto">
             Get exclusive access to new arrivals, style inspiration, and members-only offers.
           </p>
-          <form className="flex gap-3 max-w-md mx-auto">
+          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
             <input
               type="email"
               placeholder="Your email address"
@@ -111,7 +111,7 @@ export default function Footer() {
           <p className="text-white/40 text-xs">
             © 2024 Lumière. All rights reserved.
           </p>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap justify-center md:justify-end gap-4 md:gap-6 mt-4 md:mt-0">
             {['Privacy Policy', 'Terms of Service', 'Cookie Policy'].map((item) => (
               <a key={item} href="#" className="text-white/40 text-xs hover:text-[#E8B4B8] transition-colors">
                 {item}
