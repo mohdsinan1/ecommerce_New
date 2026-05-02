@@ -1,234 +1,141 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { ArrowRight, Star, Truck, RotateCcw, Shield } from 'lucide-react';
-import { Product } from '@/lib/data';
-import { productApi } from '@/lib/storage';
+import { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { SlidersHorizontal, X, ChevronDown } from 'lucide-react';
+import { Product, Category } from '@/lib/data';
+import { productApi, categoryApi } from '@/lib/storage';
 import ProductCard from '@/components/ProductCard';
 
-const heroImages = [
-  'https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?auto=compress&cs=tinysrgb&w=1200',
-  'https://images.pexels.com/photos/2220316/pexels-photo-2220316.jpeg?auto=compress&cs=tinysrgb&w=1200',
-  'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=1200',
-];
+type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'popular' | 'rating';
 
-const categoryShowcase = [
-  { name: 'Dresses', slug: 'dresses', image: 'https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?auto=compress&cs=tinysrgb&w=500', description: 'Effortless elegance', size: 'large' },
-  { name: 'Jewellery', slug: 'necklaces', image: 'https://images.pexels.com/photos/1458867/pexels-photo-1458867.jpeg?auto=compress&cs=tinysrgb&w=500', description: 'Fine ornaments', size: 'small' },
-  { name: 'Traditional Wear', slug: 'traditional', image: 'https://images.pexels.com/photos/2220316/pexels-photo-2220316.jpeg?auto=compress&cs=tinysrgb&w=500', description: 'Heritage & grace', size: 'small' },
-  { name: 'New Arrivals', slug: '', image: 'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=500', description: 'Fresh collections', size: 'medium', filter: 'new' },
-];
-
-const testimonials = [
-  { name: 'Priya S.', text: 'Absolutely stunning quality! The saree I ordered was exactly as pictured and the packaging was so elegant.', rating: 5, location: 'Mumbai' },
-  { name: 'Ananya R.', text: 'The jewellery collection is breathtaking. I\'ve received so many compliments on my necklace.', rating: 5, location: 'Bangalore' },
-  { name: 'Deepika M.', text: 'Fast delivery, beautiful products. Lumière has become my go-to for special occasions.', rating: 5, location: 'Delhi' },
-];
-
-const instagramPosts = [
-  'https://images.pexels.com/photos/2220316/pexels-photo-2220316.jpeg?auto=compress&cs=tinysrgb&w=300',
-  'https://images.pexels.com/photos/1458867/pexels-photo-1458867.jpeg?auto=compress&cs=tinysrgb&w=300',
-  'https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?auto=compress&cs=tinysrgb&w=300',
-  'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=300',
-  'https://images.pexels.com/photos/2466756/pexels-photo-2466756.jpeg?auto=compress&cs=tinysrgb&w=300',
-  'https://images.pexels.com/photos/3622622/pexels-photo-3622622.jpeg?auto=compress&cs=tinysrgb&w=300',
-];
-
-export default function HomePage() {
-  const [heroIndex, setHeroIndex] = useState(0);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+export default function ProductsPage() {
+  const searchParams = useSearchParams();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  useEffect(() => {
-    const timer = setInterval(() => setHeroIndex(i => (i + 1) % heroImages.length), 5000);
-    return () => clearInterval(timer);
-  }, []);
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [filterNew, setFilterNew] = useState(searchParams.get('filter') === 'new');
+  const [filterFeatured, setFilterFeatured] = useState(searchParams.get('filter') === 'featured');
 
-  useEffect(() => {
-    setFeaturedProducts(productApi.list({ featured: true, limit: 8 }));
-    setNewArrivals(productApi.list({ newArrival: true, limit: 4 }));
+  useEffect(() => { setCategories(categoryApi.list()); }, []);
+
+  const fetchProducts = useCallback(() => {
+    setLoading(true);
+    const result = productApi.list({
+      categorySlug: selectedCategory,
+      featured: filterFeatured || undefined,
+      newArrival: filterNew || undefined,
+      search: searchQuery,
+      minPrice: priceRange[0],
+      maxPrice: priceRange[1],
+      sort: sortBy,
+    });
+    setProducts(result);
     setLoading(false);
-  }, []);
+  }, [selectedCategory, priceRange, sortBy, searchQuery, filterNew, filterFeatured]);
+
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+
+  const clearFilters = () => {
+    setSelectedCategory(''); setPriceRange([0, 50000]); setSortBy('newest');
+    setSearchQuery(''); setFilterNew(false); setFilterFeatured(false);
+  };
+
+  const activeFilterCount = [selectedCategory, priceRange[0] > 0 || priceRange[1] < 50000, filterNew, filterFeatured].filter(Boolean).length;
 
   return (
-    <div className="bg-[#F8F5F2]">
-      {/* Hero Section */}
-      <section className="relative h-[90vh] min-h-[600px] overflow-hidden">
-        {heroImages.map((img, i) => (
-          <div key={img} className={`absolute inset-0 transition-opacity duration-1000 ${i === heroIndex ? 'opacity-100' : 'opacity-0'}`}>
-            <img src={img} alt="Hero" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-          </div>
-        ))}
-        <div className="relative h-full flex items-center">
-          <div className="max-w-7xl mx-auto px-6 w-full">
-            <div className="max-w-xl">
-              <p className="text-[#E8B4B8] text-xs tracking-[0.3em] uppercase mb-4 animate-fade-in">New Collection 2024</p>
-              <h1 className="font-playfair text-5xl md:text-7xl font-semibold text-white leading-tight mb-6">
-                Wear Your<br /><span className="italic text-[#E8B4B8]">Story</span>
-              </h1>
-              <p className="text-white/80 text-base md:text-lg mb-10 leading-relaxed max-w-sm">
-                Discover timeless pieces crafted for the modern woman who values elegance and authenticity.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link href="/products" className="btn-blush">Shop Now</Link>
-                <Link href="/products?filter=new" className="btn-outline border-white text-white hover:bg-white hover:text-[#1A1A1A]">New Arrivals</Link>
-              </div>
+    <div className="min-h-screen bg-[#F8F5F2]">
+      <div className="bg-white border-b border-[#F0EAE6]">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <p className="section-subheading mb-3">Browse</p>
+          <h1 className="section-heading">
+            {selectedCategory ? categories.find(c => c.slug === selectedCategory)?.name || selectedCategory
+              : filterNew ? 'New Arrivals' : filterFeatured ? 'Featured'
+              : searchQuery ? `Results for "${searchQuery}"` : 'All Collections'}
+          </h1>
+          <p className="text-center text-[#8C7B75] text-sm mt-2">
+            {loading ? 'Loading...' : `${products.length} ${products.length === 1 ? 'piece' : 'pieces'} found`}
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+          <button onClick={() => setFiltersOpen(!filtersOpen)} className="flex items-center gap-2 border border-[#E5DDD8] bg-white rounded-xl px-4 py-2.5 text-sm hover:border-[#E8B4B8] transition-colors w-fit">
+            <SlidersHorizontal size={16} /> Filters
+            {activeFilterCount > 0 && <span className="bg-[#E8B4B8] text-white text-xs px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>}
+          </button>
+          <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap w-full sm:w-auto overflow-hidden">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 max-w-full flex-1">
+              <button onClick={() => setSelectedCategory('')} className={`px-4 py-2 rounded-full text-xs whitespace-nowrap transition-all flex-shrink-0 ${!selectedCategory ? 'bg-[#1A1A1A] text-white' : 'bg-white border border-[#E5DDD8] text-[#2D2D2D] hover:border-[#E8B4B8]'}`}>All</button>
+              {categories.map(cat => (
+                <button key={cat.id} onClick={() => setSelectedCategory(cat.slug)} className={`px-4 py-2 rounded-full text-xs whitespace-nowrap transition-all flex-shrink-0 ${selectedCategory === cat.slug ? 'bg-[#1A1A1A] text-white' : 'bg-white border border-[#E5DDD8] text-[#2D2D2D] hover:border-[#E8B4B8]'}`}>{cat.name}</button>
+              ))}
+            </div>
+            <div className="relative w-full sm:w-auto flex-shrink-0">
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)} className="appearance-none w-full bg-white border border-[#E5DDD8] rounded-xl px-4 py-2.5 text-sm pr-8 focus:outline-none focus:border-[#E8B4B8] cursor-pointer">
+                <option value="newest">Newest First</option>
+                <option value="popular">Most Popular</option>
+                <option value="rating">Highest Rated</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8C7B75] pointer-events-none" />
             </div>
           </div>
         </div>
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-          {heroImages.map((_, i) => (
-            <button key={i} onClick={() => setHeroIndex(i)} className={`h-1 rounded-full transition-all duration-300 ${i === heroIndex ? 'w-8 bg-[#E8B4B8]' : 'w-2 bg-white/40'}`} />
-          ))}
-        </div>
-        <div className="absolute right-6 bottom-8 flex flex-col items-center gap-2">
-          <span className="text-white/40 text-[10px] tracking-widest uppercase rotate-90 origin-center translate-y-4">Scroll</span>
-          <div className="w-px h-12 bg-gradient-to-b from-transparent to-white/40" />
-        </div>
-      </section>
 
-      {/* Features bar */}
-      <section className="bg-white border-y border-[#F0EAE6]">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { icon: Truck, label: 'Free Shipping', sub: 'On orders above ₹2999' },
-              { icon: RotateCcw, label: 'Easy Returns', sub: '15-day return policy' },
-              { icon: Shield, label: 'Secure Payment', sub: '100% safe & encrypted' },
-              { icon: Star, label: 'Premium Quality', sub: 'Handcrafted with love' },
-            ].map(({ icon: Icon, label, sub }) => (
-              <div key={label} className="flex items-center gap-4">
-                <div className="p-3 bg-[#F8F5F2] rounded-full"><Icon size={20} className="text-[#E8B4B8]" /></div>
-                <div>
-                  <p className="text-sm font-semibold text-[#1A1A1A]">{label}</p>
-                  <p className="text-xs text-[#8C7B75]">{sub}</p>
-                </div>
+        {filtersOpen && (
+          <div className="bg-white border border-[#F0EAE6] rounded-2xl p-6 mb-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h4 className="font-playfair font-semibold text-[#1A1A1A] mb-4">Price Range</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm text-[#8C7B75]"><span>₹{priceRange[0].toLocaleString('en-IN')}</span><span>₹{priceRange[1].toLocaleString('en-IN')}</span></div>
+                {[['Under ₹1,000', 0, 1000], ['₹1,000 – ₹5,000', 1000, 5000], ['₹5,000 – ₹15,000', 5000, 15000], ['₹15,000 – ₹50,000', 15000, 50000], ['All Prices', 0, 50000]].map(([label, min, max]) => (
+                  <button key={label as string} onClick={() => setPriceRange([min as number, max as number])} className={`block w-full text-left text-sm py-1.5 transition-colors ${priceRange[0] === min && priceRange[1] === max ? 'text-[#E8B4B8] font-medium' : 'text-[#8C7B75] hover:text-[#1A1A1A]'}`}>{label as string}</button>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Category Showcase */}
-      <section className="py-20 max-w-7xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <p className="section-subheading mb-3">Browse by</p>
-          <h2 className="section-heading">Our Collections</h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-[500px]">
-          <Link href={`/products?category=${categoryShowcase[0].slug}`} className="col-span-2 row-span-2 relative overflow-hidden rounded-2xl group cursor-pointer">
-            <img src={categoryShowcase[0].image} alt={categoryShowcase[0].name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-            <div className="absolute bottom-6 left-6">
-              <p className="text-white/70 text-xs tracking-widest uppercase mb-1">{categoryShowcase[0].description}</p>
-              <h3 className="font-playfair text-3xl font-semibold text-white">{categoryShowcase[0].name}</h3>
-              <span className="inline-flex items-center gap-2 text-[#E8B4B8] text-sm mt-2 group-hover:gap-3 transition-all">Shop now <ArrowRight size={14} /></span>
             </div>
-          </Link>
-          {categoryShowcase.slice(1).map((cat) => (
-            <Link key={cat.name} href={cat.filter ? `/products?filter=${cat.filter}` : `/products?category=${cat.slug}`} className="relative overflow-hidden rounded-2xl group cursor-pointer">
-              <img src={cat.image} alt={cat.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-4 left-4">
-                <p className="text-white/70 text-[10px] tracking-widest uppercase mb-0.5">{cat.description}</p>
-                <h3 className="font-playfair text-lg font-semibold text-white">{cat.name}</h3>
+            <div>
+              <h4 className="font-playfair font-semibold text-[#1A1A1A] mb-4">Special</h4>
+              <div className="space-y-3">
+                {[{ label: 'New Arrivals', state: filterNew, setter: setFilterNew }, { label: 'Featured', state: filterFeatured, setter: setFilterFeatured }].map(({ label, state, setter }) => (
+                  <label key={label} className="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" checked={state} onChange={(e) => setter(e.target.checked)} className="w-4 h-4 rounded border-[#E5DDD8] text-[#E8B4B8] focus:ring-[#E8B4B8]" />
+                    <span className="text-sm text-[#2D2D2D]">{label}</span>
+                  </label>
+                ))}
               </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured Products */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <p className="section-subheading mb-3">Handpicked for you</p>
-            <h2 className="section-heading">Featured Pieces</h2>
-          </div>
-          {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (<div key={i} className="bg-[#F8F5F2] rounded-2xl aspect-[3/4] animate-pulse" />))}
             </div>
-          ) : featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {featuredProducts.map(product => (<ProductCard key={product.id} product={product} />))}
+            <div className="flex items-end">
+              <button onClick={clearFilters} className="flex items-center gap-2 text-sm text-[#E8B4B8] hover:text-[#D4969A] transition-colors"><X size={14} /> Clear all filters</button>
             </div>
-          ) : (
-            <div className="text-center py-16 text-[#8C7B75]"><p>Products coming soon. Check back shortly!</p></div>
-          )}
-          <div className="text-center mt-12">
-            <Link href="/products" className="btn-outline inline-flex items-center gap-2">View All Products <ArrowRight size={16} /></Link>
           </div>
-        </div>
-      </section>
+        )}
 
-      {/* Banner Section */}
-      <section className="relative py-32 overflow-hidden">
-        <img src="https://images.pexels.com/photos/3622622/pexels-photo-3622622.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Banner" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-[#1A1A1A]/70" />
-        <div className="relative max-w-3xl mx-auto px-6 text-center">
-          <p className="text-[#E8B4B8] text-xs tracking-[0.3em] uppercase mb-4">Limited time</p>
-          <h2 className="font-playfair text-4xl md:text-6xl font-semibold text-white mb-4">Up to 40% Off<br /><span className="italic text-[#E8B4B8]">Jewellery Collection</span></h2>
-          <p className="text-white/70 mb-10 text-lg">Handcrafted pieces at exceptional prices. Limited stock available.</p>
-          <Link href="/products?category=necklaces" className="btn-blush inline-flex items-center gap-2">Shop Sale <ArrowRight size={16} /></Link>
-        </div>
-      </section>
-
-      {/* New Arrivals */}
-      {newArrivals.length > 0 && (
-        <section className="py-20 max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <p className="section-subheading mb-3">Just landed</p>
-            <h2 className="section-heading">New Arrivals</h2>
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[...Array(12)].map((_, i) => (<div key={i} className="bg-white rounded-2xl overflow-hidden"><div className="aspect-[3/4] bg-[#F0EAE6] animate-pulse" /><div className="p-4 space-y-2"><div className="h-3 bg-[#F0EAE6] rounded animate-pulse w-1/2" /><div className="h-4 bg-[#F0EAE6] rounded animate-pulse" /><div className="h-4 bg-[#F0EAE6] rounded animate-pulse w-1/4" /></div></div>))}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {newArrivals.map(product => (<ProductCard key={product.id} product={product} />))}
+        ) : products.length === 0 ? (
+          <div className="text-center py-24">
+            <div className="w-16 h-16 bg-[#F0EAE6] rounded-full flex items-center justify-center mx-auto mb-4"><SlidersHorizontal size={24} className="text-[#8C7B75]" /></div>
+            <h3 className="font-playfair text-xl text-[#1A1A1A] mb-2">No products found</h3>
+            <p className="text-[#8C7B75] text-sm mb-6">Try adjusting your filters or search query</p>
+            <button onClick={clearFilters} className="btn-outline">Clear Filters</button>
           </div>
-        </section>
-      )}
-
-      {/* Testimonials */}
-      <section className="py-20 bg-[#1A1A1A]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <p className="text-[#E8B4B8] text-xs tracking-widest uppercase mb-3">What they say</p>
-            <h2 className="font-playfair text-3xl md:text-4xl font-semibold text-white">Loved by Thousands</h2>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {products.map(product => (<ProductCard key={product.id} product={product} />))}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((t) => (
-              <div key={t.name} className="bg-white/5 border border-white/10 rounded-2xl p-8">
-                <div className="flex mb-4">{[...Array(t.rating)].map((_, i) => (<Star key={i} size={14} className="text-[#C9A96E] fill-[#C9A96E]" />))}</div>
-                <p className="text-white/70 text-sm leading-relaxed mb-6 italic">&quot;{t.text}&quot;</p>
-                <div>
-                  <p className="font-playfair font-semibold text-white">{t.name}</p>
-                  <p className="text-white/40 text-xs">{t.location}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Instagram Grid */}
-      <section className="py-20 max-w-7xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <p className="section-subheading mb-3">Follow us</p>
-          <h2 className="section-heading">@lumiere.fashion</h2>
-        </div>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-          {instagramPosts.map((img, i) => (
-            <a key={i} href="#" className="relative aspect-square overflow-hidden rounded-xl group">
-              <img src={img} alt="Instagram" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-[#E8B4B8]/0 group-hover:bg-[#E8B4B8]/30 transition-all duration-300 flex items-center justify-center">
-                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium tracking-widest uppercase">View</span>
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
+        )}
+      </div>
     </div>
   );
 }
