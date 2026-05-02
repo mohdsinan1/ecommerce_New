@@ -48,26 +48,28 @@ export default function CartPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => (
-                <div key={item.id} className="bg-white rounded-2xl p-6 shadow-sm flex gap-6">
-                  <div className="w-28 h-32 bg-[#F8F5F2] rounded-xl overflow-hidden flex-shrink-0">
+                <div key={item.id} className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm flex gap-4 sm:gap-6">
+                  <div className="w-24 sm:w-28 h-28 sm:h-32 bg-[#F8F5F2] rounded-xl overflow-hidden flex-shrink-0">
                     <img src={item.products?.image_url || 'https://images.pexels.com/photos/7679720/pexels-photo-7679720.jpeg?auto=compress&cs=tinysrgb&w=200'} alt={item.products?.name} className="w-full h-full object-cover" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        {item.products?.categories && <p className="text-[10px] tracking-widest uppercase text-[#E8B4B8] mb-1">{item.products.categories.name}</p>}
-                        <h3 className="font-playfair font-medium text-[#1A1A1A]">{item.products?.name}</h3>
-                        {(item.size || item.color) && <p className="text-xs text-[#8C7B75] mt-1">{item.size && `Size: ${item.size}`}{item.size && item.color && ' · '}{item.color && `Color: ${item.color}`}</p>}
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          {item.products?.categories && <p className="text-[10px] tracking-widest uppercase text-[#E8B4B8] mb-1 truncate">{item.products.categories.name}</p>}
+                          <h3 className="font-playfair font-medium text-[#1A1A1A] line-clamp-2 sm:line-clamp-1">{item.products?.name}</h3>
+                          {(item.size || item.color) && <p className="text-xs text-[#8C7B75] mt-1 truncate">{item.size && `Size: ${item.size}`}{item.size && item.color && ' · '}{item.color && `Color: ${item.color}`}</p>}
+                        </div>
+                        <button onClick={() => removeFromCart(item.id)} className="text-[#8C7B75] hover:text-red-400 transition-colors p-1 flex-shrink-0"><Trash2 size={16} /></button>
                       </div>
-                      <button onClick={() => removeFromCart(item.id)} className="text-[#8C7B75] hover:text-red-400 transition-colors p-1"><Trash2 size={16} /></button>
                     </div>
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center border border-[#E5DDD8] rounded-xl overflow-hidden">
-                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="px-3 py-2 hover:bg-[#F8F5F2] transition-colors"><Minus size={12} /></button>
-                        <span className="px-4 py-2 text-sm font-medium border-x border-[#E5DDD8]">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-3 py-2 hover:bg-[#F8F5F2] transition-colors"><Plus size={12} /></button>
+                    <div className="flex flex-wrap items-center justify-between mt-4 gap-2">
+                      <div className="flex items-center border border-[#E5DDD8] rounded-xl overflow-hidden flex-shrink-0">
+                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="px-3 py-1.5 sm:py-2 hover:bg-[#F8F5F2] transition-colors"><Minus size={12} /></button>
+                        <span className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm font-medium border-x border-[#E5DDD8]">{item.quantity}</span>
+                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-3 py-1.5 sm:py-2 hover:bg-[#F8F5F2] transition-colors"><Plus size={12} /></button>
                       </div>
-                      <p className="font-semibold text-[#1A1A1A]">₹{((item.products?.price || 0) * item.quantity).toLocaleString('en-IN')}</p>
+                      <p className="font-semibold text-[#1A1A1A] text-sm sm:text-base">₹{((item.products?.price || 0) * item.quantity).toLocaleString('en-IN')}</p>
                     </div>
                   </div>
                 </div>
