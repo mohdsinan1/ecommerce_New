@@ -70,7 +70,7 @@ export default function Navbar() {
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-sm shadow-sm' : 'bg-[#F8F5F2]/90 backdrop-blur-sm'}`}>
         {/* Top announcement bar */}
-        <div className="bg-[#1A1A1A] text-white text-center py-2 text-xs tracking-widest uppercase">
+        <div className="bg-[#1A1A1A] text-white text-center py-2 px-2 text-[10px] sm:text-xs tracking-widest uppercase truncate sm:whitespace-normal">
           Free shipping on orders above ₹2999 &nbsp;|&nbsp; New arrivals every Friday
         </div>
 
